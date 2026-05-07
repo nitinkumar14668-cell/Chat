@@ -1,0 +1,6 @@
+{
+  "name": "WhatsApp Single file Clone",
+  "description": "A WhatsApp UI clone built entirely in a single index.html file using vanilla HTML, CSS, and JavaScript.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

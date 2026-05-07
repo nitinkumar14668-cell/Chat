@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp Clone</title>
+    <style>
+        :root {
+            --primary: #00a884;
+            --bg-default: #f0f2f5;
+            --bg-chat: #efeae2;
+            --message-in: #ffffff;
+            --message-out: #d9fdd3;
+            --text-primary: #111b21;
+            --text-secondary: #667781;
+            --border: #d1d7db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #e3e1df;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container for the app */
+        #app {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-default);
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,0.06), 0 2px 5px 0 rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        @media (min-width: 1024px) {
+            #app {
+                width: 100%;
+                max-width: 1600px;
+                height: calc(100vh - 40px);
+                margin-top: 20px;
+            }
+            body {
+                background-image: linear-gradient(to bottom, var(--primary) 0%, var(--primary) 130px, #e3e1df 130px, #e3e1df 100%);
+            }
+        }
+
+        /* Sidebar */
+        #sidebar {
+            flex: 0 0 30%;
+            min-width: 330px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        header {
+            height: 60px;
+            background-color: var(--bg-default);
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            justify-content: space-between;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #dfe5e7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        #search-container {
+            padding: 8px 12px;
+            background-color: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #search-container input {
+            width: 100%;
+            border: none;
+            background-color: var(--bg-default);
+            padding: 8px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #contact-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            display: flex;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f2f2f2;
+        }
+
+        .contact-item:hover {
+            background-color: var(--bg-default);
+        }
+
+        .contact-item.active {
+            background-color: var(--bg-default);
+        }
+
+        .contact-info {
+            flex: 1;
+            margin-left: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .contact-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+
+        .contact-name {
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .contact-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .contact-last-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        /* Chat Area */
+        #chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-chat);
+            position: relative;
+        }
+
+        #chat-area::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('https://static.whatsapp.net/rsrc.php/v3/yl/r/r_QMe1b2sEU.png');
+            opacity: 0.06;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #chat-header {
+            z-index: 1;
+        }
+
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        .message-wrapper {
+            display: flex;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .message-wrapper.in {
+            justify-content: flex-start;
+        }
+
+        .message-wrapper.out {
+            justify-content: flex-end;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 6px 10px 8px 10px;
+            border-radius: 8px;
+            position: relative;
+            font-size: 14px;
+            line-height: 19px;
+            color: var(--text-primary);
+            box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
+        }
+
+        .message-wrapper.in .message {
+            background-color: var(--message-in);
+            border-top-left-radius: 0;
+        }
+
+        .message-wrapper.out .message {
+            background-color: var(--message-out);
+            border-top-right-radius: 0;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            float: right;
+            margin-left: 10px;
+            margin-top: 6px;
+        }
+
+        #chat-input-area {
+            height: 60px;
+            background-color: var(--bg-default);
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            z-index: 1;
+        }
+
+        #chat-input-area input {
+            flex: 1;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+            margin-right: 15px;
+        }
+
+        #send-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+        #send-btn svg {
+            width: 24px; height: 24px;
+            fill: currentColor;
+        }
+        
+        #empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-default);
+            z-index: 1;
+        }
+        
+        #empty-chat h2 {
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                flex: 1;
+                min-width: 100%;
+            }
+            #chat-area {
+                display: none;
+                flex: 1;
+            }
+            .show-chat #sidebar { display: none; }
+            .show-chat #chat-area { display: flex; }
+            
+            #back-btn {
+                display: block;
+                background: none;
+                border: none;
+                margin-right: 15px;
+                font-size: 20px;
+                cursor: pointer;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            #back-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <header>
+            <div class="avatar" style="background-color: #cfd8dc;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+            </div>
+            <div style="color: var(--text-secondary);">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 7a2 2 0 1 0-.001-4.001A2 2 0 0 0 12 7zm0 2a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 9zm0 6a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 15z"></path></svg>
+            </div>
+        </header>
+        <div id="search-container">
+            <input type="text" placeholder="Search or start new chat">
+        </div>
+        <div id="contact-list">
+            <!-- Contacts rendered by JS -->
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div id="chat-area">
+        <div id="empty-chat">
+            <svg viewBox="0 0 24 24" width="100" height="100" fill="#d1d7db"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L2 22l5.71-1.01A9.957 9.957 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+            <h2>WhatsApp Web Clone</h2>
+            <p style="color: var(--text-secondary); margin-top: 10px; font-size: 14px;">Select a chat to start messaging.</p>
+        </div>
+        
+        <header id="chat-header" style="display: none;">
+            <div style="display: flex; align-items: center;">
+                <button id="back-btn" onclick="closeChat()">&#8592;</button>
+                <div class="avatar" id="current-chat-avatar"></div>
+                <div style="margin-left: 15px;">
+                    <div class="contact-name" id="current-chat-name"></div>
+                    <div class="contact-time">online</div>
+                </div>
+            </div>
+        </header>
+        
+        <div id="messages" style="display: none;">
+            <!-- Messages rendered by JS -->
+        </div>
+        
+        <div id="chat-input-area" style="display: none;">
+            <input type="text" id="message-input" placeholder="Type a message" onkeypress="handleKeyPress(event)">
+            <button id="send-btn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const state = {
+        activeContactId: null,
+        contacts: [
+            {
+                id: 1,
+                name: "Rahul Verma",
+                avatarColor: "#ff7675",
+                messages: [
+                    { text: "Bhai kya haal hai?", time: "10:30 AM", type: "in" },
+                    { text: "Sab badhiya, tu bata", time: "10:32 AM", type: "out" },
+                    { text: "Bhai wathsapp jaisa app ban gaya?", time: "10:35 AM", type: "in" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Priya Sharma",
+                avatarColor: "#74b9ff",
+                messages: [
+                    { text: "Hi, check the new documents.", time: "09:15 AM", type: "in" },
+                    { text: "Sure, checking right now.", time: "09:20 AM", type: "out" }
+                ]
+            },
+            {
+                id: 3,
+                name: "Amit Kumar",
+                avatarColor: "#55efc4",
+                messages: [
+                    { text: "Bhai sham ko milte hai.", time: "Yesterday", type: "in" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Neha Singh",
+                avatarColor: "#a29bfe",
+                messages: [
+                    { text: "Happy Birthday! 🎂", time: "Yesterday", type: "in" },
+                    { text: "Thank you so much! 😊", time: "Yesterday", type: "out" }
+                ]
+            }
+        ]
+    };
+
+    function renderContacts() {
+        const list = document.getElementById('contact-list');
+        list.innerHTML = '';
+        
+        state.contacts.forEach(contact => {
+            const lastMsg = contact.messages[contact.messages.length - 1];
+            const div = document.createElement('div');
+            div.className = \`contact-item \${state.activeContactId === contact.id ? 'active' : ''}\`;
+            div.onclick = () => openChat(contact.id);
+            
+            div.innerHTML = \`
+                <div class="avatar" style="background-color: \${contact.avatarColor}; font-size: 16px;">
+                    \${contact.name.charAt(0)}
+                </div>
+                <div class="contact-info">
+                    <div class="contact-header">
+                        <span class="contact-name">\${contact.name}</span>
+                        <span class="contact-time">\${lastMsg ? lastMsg.time : ''}</span>
+                    </div>
+                    <div class="contact-last-message">\${lastMsg ? lastMsg.text : ''}</div>
+                </div>
+            \`;
+            list.appendChild(div);
+        });
+    }
+
+    function openChat(contactId) {
+        state.activeContactId = contactId;
+        renderContacts();
+        
+        document.getElementById('app').classList.add('show-chat');
+        
+        document.getElementById('empty-chat').style.display = 'none';
+        document.getElementById('chat-header').style.display = 'flex';
+        document.getElementById('messages').style.display = 'flex';
+        document.getElementById('chat-input-area').style.display = 'flex';
+        
+        const contact = state.contacts.find(c => c.id === contactId);
+        document.getElementById('current-chat-name').innerText = contact.name;
+        document.getElementById('current-chat-avatar').innerText = contact.name.charAt(0);
+        document.getElementById('current-chat-avatar').style.backgroundColor = contact.avatarColor;
+        
+        renderMessages();
+        document.getElementById('message-input').focus();
+    }
+
+    function closeChat() {
+        document.getElementById('app').classList.remove('show-chat');
+        state.activeContactId = null;
+        renderContacts();
+    }
+
+    function renderMessages() {
+        const contact = state.contacts.find(c => c.id === state.activeContactId);
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
+        
+        contact.messages.forEach(msg => {
+            const wrapper = document.createElement('div');
+            wrapper.className = \`message-wrapper \${msg.type}\`;
+            
+            wrapper.innerHTML = \`
+                <div class="message">
+                    \${msg.text}
+                    <span class="message-time">\${msg.time}</span>
+                </div>
+            \`;
+            messagesDiv.appendChild(wrapper);
+        });
+        
+        // Scroll to bottom
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function formatTime(date) {
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        return hours + ':' + minutes + ' ' + ampm;
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('message-input');
+        const text = input.value.trim();
+        if (!text || !state.activeContactId) return;
+        
+        const contact = state.contacts.find(c => c.id === state.activeContactId);
+        
+        // Add user message
+        contact.messages.push({
+            text: text,
+            time: formatTime(new Date()),
+            type: 'out'
+        });
+        
+        input.value = '';
+        renderMessages();
+        renderContacts();
+        
+        // Simulate reply
+        setTimeout(() => {
+            contact.messages.push({
+                text: 'Hmm, theek hai. (Auto-reply)',
+                time: formatTime(new Date()),
+                type: 'in'
+            });
+            if (state.activeContactId === contact.id) {
+                renderMessages();
+            }
+            renderContacts();
+        }, 1500);
+    }
+
+    // Initialize
+    renderContacts();
+</script>
+</body>
+</html>
